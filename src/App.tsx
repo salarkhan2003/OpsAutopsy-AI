@@ -692,7 +692,7 @@ export default function App() {
     <div className="min-h-screen bg-[#0B1220] text-[#F8FAFC] flex flex-col items-center justify-start p-0 md:p-4">
       
       {/* Centered Device Limit Frame */}
-      <div className="w-full max-w-[420px] bg-[#111827] min-h-screen md:min-h-[880px] md:rounded-[1.75rem] md:border md:border-slate-850 shadow-2xl flex flex-col relative overflow-hidden pb-18">
+      <div className="w-full max-w-[420px] bg-[#111827] h-[100dvh] md:h-[880px] md:min-h-[880px] md:rounded-[1.75rem] md:border md:border-slate-850 shadow-2xl flex flex-col relative overflow-hidden pb-18">
         
         {/* Sticky App Header Bar */}
         <header className="sticky top-0 z-30 bg-[#111827]/90 backdrop-blur-md border-b border-slate-850 px-4 py-3 flex justify-between items-center">
