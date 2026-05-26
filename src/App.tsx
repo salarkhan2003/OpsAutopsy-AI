@@ -127,7 +127,11 @@ export default function App() {
 
   // Dynamic user session metrics
   const [technicianName, setTechnicianName] = useState<string>(() => {
-    return localStorage.getItem("ops_technician_name") || "Salar Khan";
+    const cached = localStorage.getItem("ops_technician_name");
+    if (cached && cached.trim() && cached.trim() !== "S. Patan") {
+      return cached;
+    }
+    return "Salar Khan";
   });
   const [isEditingName, setIsEditingName] = useState<boolean>(false);
   const [tempName, setTempName] = useState<string>("");
@@ -408,12 +412,12 @@ export default function App() {
       return;
     }
     setMicActive(true);
-    setProgressLog(prev => [...prev, "🎤 Initiated virtual audio transcoder..."]);
+    setProgressLog(prev => [...prev, "🎤 Initiated acoustic recording process..."]);
     
     setTimeout(() => {
       const transText = `Observation: Grid voltage fluctuations on substation phase windings exceed safety threshold. Audible localized humming pattern has stepped up to high-pitch frequency. Ambient moisture is logged within nominal parameters at 12%.`;
       setDescription(prev => prev.trim() ? `${prev}\n\n[SPEECH DICTATION: ${transText}]` : transText);
-      setProgressLog(prev => [...prev, "✓ Encoded acoustic data processed and pushed to Intake."]);
+      setProgressLog(prev => [...prev, "✓ Acoustic recording analyzed and observation text appended."]);
       setMicActive(false);
     }, 1500);
   };
@@ -434,10 +438,10 @@ export default function App() {
     setIsEscalated(false);
 
     const steps = [
-      "📡 Dialing Sector-4 Telemetry Hub telemetry signals...",
-      "🧠 Aligning diagnostic engine rules and historical precedents...",
-      "🔍 Resolving spatial asset location patterns with telemetry databases...",
-      "⚡ Dispatching multi-layered diagnostic parsing sequence..."
+      "📡 Establishing connection with Sector-4 Telemetry Gateway...",
+      "⚙️ Parsing telemetry records and historical circuit trip thresholds...",
+      "🔍 Resolving equipment registry and substation geographic reference tables...",
+      "⚡ Running automated diagnostic rules and failure signature checks..."
     ];
 
     for (const step of steps) {
@@ -514,7 +518,7 @@ export default function App() {
         repair_guidance: isOverheat ? [
           "Disconnect incoming 110kV feeder loops through line-switch isolation switches.",
           "Perform standard Lockout-Tagout (LOTO) procedures on breaker Panel B.",
-          "Use portable high-frequency laser monitors to verify cooling casing thermal state.",
+          "Use certified handheld thermal imaging cameras to inspect the transformer block casing surface temperature.",
           "Exhaust accumulated system pressure and fit the replacement Vent Pack."
         ] : isRelayTrip ? [
           "De-energize auxiliary DC grid feeder power loops safely.",
@@ -850,7 +854,7 @@ export default function App() {
             <div className="space-y-2">
               <h1 className="text-xl font-bold tracking-tight text-white font-sans">OpsAutopsy AI</h1>
               <p className="text-xs text-slate-400 font-sans max-w-xs mx-auto">
-                Next-generation diagnostic platform for heavy railway operations and electrical infrastructure grids.
+                Enterprise diagnostic platform for heavy railway operations and electrical infrastructure grids.
               </p>
             </div>
           </div>
@@ -1014,13 +1018,13 @@ export default function App() {
   // MAIN APP SHELL CONTAINER (MAX WRAPPER 430px)
   // =======================================
   return (
-    <div className="min-h-screen bg-[#0B1220] text-[#F8FAFC] flex flex-col items-center justify-start p-0 md:p-4">
+    <div className={`min-h-screen ${isDarkMode ? 'bg-[#0B1220] text-[#F8FAFC]' : 'bg-[#F1F5F9] text-[#0F172A]'} flex flex-col items-center justify-start p-0 md:p-4 transition-colors duration-200`}>
       
       {/* Centered Device Limit Frame */}
-      <div className="w-full max-w-[420px] bg-[#111827] h-[100dvh] md:h-[880px] md:min-h-[880px] md:rounded-[1.75rem] md:border md:border-slate-850 shadow-2xl flex flex-col relative overflow-hidden pb-18">
+      <div className={`w-full max-w-[420px] ${isDarkMode ? 'bg-[#111827] border-slate-850/80' : 'bg-white border-slate-200/80'} h-[100dvh] md:h-[880px] md:min-h-[880px] md:rounded-[1.75rem] md:border shadow-2xl flex flex-col relative overflow-hidden pb-18 transition-all duration-200`}>
         
         {/* Sticky App Header Bar */}
-        <header className="sticky top-0 z-30 bg-[#111827]/90 backdrop-blur-md border-b border-slate-850 px-4 py-3 flex justify-between items-center">
+        <header className={`sticky top-0 z-30 ${isDarkMode ? 'bg-[#111827]/90 border-slate-850' : 'bg-white/95 border-slate-200'} backdrop-blur-md border-b px-4 py-3 flex justify-between items-center transition-colors duration-200`}>
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
@@ -1040,7 +1044,7 @@ export default function App() {
             <button
               onClick={() => setIsDarkMode(prev => !prev)}
               className="p-1.5 px-2 bg-[#1E293B] hover:bg-slate-800 border border-slate-800 rounded text-[8px] font-mono text-slate-400 flex items-center gap-1 active:scale-95 transition-all"
-              title={isDarkMode ? "Switch to High-Contrast Light Mode" : "Switch to Tactical Dark Mode"}
+              title={isDarkMode ? "Switch to High-Contrast Light Mode" : "Switch to Standard Dark Mode"}
             >
               {isDarkMode ? (
                 <>
@@ -1931,7 +1935,7 @@ export default function App() {
                   {/* AI Model Sensitivity Slider */}
                   <div className="bg-[#0F172A] p-2.5 rounded-xl border border-slate-850 space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-[11px] font-bold block text-white">Cognitive Analysis Sensitivity</span>
+                      <span className="text-[11px] font-bold block text-white">Diagnostic Depth Threshold</span>
                       <span className="text-xs font-bold text-cyan-400">{aiSensitivity}% RATE</span>
                     </div>
                     <input
@@ -2059,10 +2063,10 @@ export default function App() {
                     <div className="w-7 h-7 rounded bg-cyan-500/10 flex items-center justify-center text-cyan-400">
                       <Cpu className="w-4 h-4" />
                     </div>
-                    <span className="text-xs font-bold text-white uppercase font-mono">02 // DIGITAL AUTOPSY COMPILATION</span>
+                    <span className="text-xs font-bold text-white uppercase font-mono">02 // DIGITAL FAILURE RECONSTRUCTION</span>
                   </div>
                   <p className="text-[11.5px] text-slate-350 leading-relaxed font-sans pl-9">
-                    Input files feed into our server-side Gemini cognitive analysis core. The Autopsy view outputs a synthesized incident chronicle:
+                    Input files feed into our server-side Gemini AI analysis service. The Failure Analysis view outputs a validated incident diagnostic chronicle:
                   </p>
                   <ul className="list-disc pl-14 text-[11px] text-slate-400 space-y-1">
                     <li><strong>Failure Timelines:</strong> Multi-stage chronological breakdown of variables.</li>
@@ -2134,7 +2138,7 @@ export default function App() {
         </main>
 
         {/* Floating Bottom Navigator Tab menu bar - Fluid & Scroll-free on all mobile sizes */}
-        <nav className="absolute bottom-0 left-0 right-0 z-30 bg-[#111827]/95 border-t border-slate-850 py-2 px-1 flex justify-around items-center select-none backdrop-blur-md gap-0.5 md:gap-1">
+        <nav className={`absolute bottom-0 left-0 right-0 z-30 ${isDarkMode ? 'bg-[#111827]/95 border-slate-850' : 'bg-[#F8FAFC] border-slate-200'} border-t py-2 px-1 flex justify-around items-center select-none backdrop-blur-md gap-0.5 md:gap-1 transition-colors duration-200`}>
           
           <button
             onClick={() => setActiveTab("dashboard")}
@@ -2292,10 +2296,10 @@ export default function App() {
                         <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400">
                           <Database className="w-4.5 h-4.5" />
                         </div>
-                        <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">04 // THE AI AUTOPSY CORE</h3>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">04 // THE AI DIAGNOSTIC ENGINE</h3>
                       </div>
                       <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
-                        Our advanced Gemini cognitive pipeline cross-probes input. It builds a failure analysis timeline, logs risk indexes, formats diagnostic guidance, and lists evidence gaps.
+                        Our Gemini AI pipeline evaluates all telemetry inputs. It compiles a sequential failure timeline, estimates risk factors, formats standard repair steps, and identifies missing evidence.
                       </p>
                       <div className="p-2.5 rounded-lg bg-[#0F172A]/70 border border-slate-805 text-[9.5px] font-mono text-[#06B6D4] leading-normal font-bold">
                         *Supports OpenRouter proxies for seamless Vercel hosting.

@@ -434,7 +434,7 @@ When analyzing field issues (both via image and text description):
       incident_timeline: [
         "09:10:00 - Telemetry gateway sensor recorded anomalous reading.",
         "09:12:45 - High current deviation detected on Section 4 relay panel.",
-        "09:14:00 - Alert flag dispatched to OpsMind incident hub."
+        "09:14:00 - Alert flag dispatched to grid operations central control."
       ],
       severity_info: {
         severity: "HIGH",
