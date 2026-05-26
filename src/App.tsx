@@ -38,7 +38,9 @@ import {
   ExternalLink,
   Plus,
   Compass,
-  Database
+  Database,
+  Sun,
+  Moon
 } from "lucide-react";
 
 import { PRESET_SCENARIOS } from "./scenarios";
@@ -93,6 +95,20 @@ export default function App() {
   const [offlineMode, setOfflineMode] = useState<boolean>(false);
   const [aiSensitivity, setAiSensitivity] = useState<number>(85);
   const [notificationState, setNotificationState] = useState<boolean>(true);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    return localStorage.getItem("ops_autopsy_theme") !== "light";
+  });
+
+  // Keep theme synchronized with the body node
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.remove("light");
+      localStorage.setItem("ops_autopsy_theme", "dark");
+    } else {
+      document.body.classList.add("light");
+      localStorage.setItem("ops_autopsy_theme", "light");
+    }
+  }, [isDarkMode]);
 
   // References
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -484,6 +500,8 @@ export default function App() {
 
   const handleClearTutorialState = () => {
     localStorage.removeItem("ops_autopsy_onboarded_v2");
+    localStorage.removeItem("ops_autopsy_theme");
+    setIsDarkMode(true);
     setIsOnboarded(false);
     setOnboardStep(0);
     setShowSplash(true);
@@ -693,9 +711,28 @@ export default function App() {
             {offlineMode && (
               <span className="text-[8px] font-mono text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 uppercase font-black">OFFLINE MODE</span>
             )}
+            
+            <button
+              onClick={() => setIsDarkMode(prev => !prev)}
+              className="p-1.5 px-2 bg-[#1E293B] hover:bg-slate-800 border border-slate-800 rounded text-[8px] font-mono text-slate-400 flex items-center gap-1 active:scale-95 transition-all"
+              title={isDarkMode ? "Switch to High-Contrast Light Mode" : "Switch to Tactical Dark Mode"}
+            >
+              {isDarkMode ? (
+                <>
+                  <Sun className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                  <span>LIGHT</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-2.5 h-2.5 text-cyan-400 shrink-0" />
+                  <span>DARK</span>
+                </>
+              )}
+            </button>
+
             <button
               onClick={handleClearTutorialState}
-              className="p-1 px-2 bg-[#1E293B] hover:bg-slate-800 border border-slate-800 rounded text-[8px] font-mono text-slate-400 flex items-center gap-1 active:scale-95 transition-all"
+              className="p-1.5 px-2 bg-[#1E293B] hover:bg-slate-800 border border-slate-800 rounded text-[8px] font-mono text-slate-400 flex items-center gap-1 active:scale-95 transition-all"
               title="Reset configuration defaults & tutorial state"
             >
               <RotateCcw className="w-2.5 h-2.5 text-slate-500" />

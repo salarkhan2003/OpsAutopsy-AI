@@ -1,14 +1,94 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
+:root {
+  --bg-color: #0B1220;
+  --text-main: #F8FAFC;
+  --card-bg: #1E293B;
+  --card-border: rgba(255, 255, 255, 0.05);
+  --card-shadow: 
+    inset 1px 1px 1.5px rgba(255, 255, 255, 0.08), 
+    inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.45), 
+    0 8px 16px -4px rgba(0, 0, 0, 0.35), 
+    0 4px 6px -2px rgba(0, 0, 0, 0.25);
+
+  --inset-bg: #0F172A;
+  --inset-border: rgba(255, 255, 255, 0.02);
+  --inset-shadow: 
+    inset 1.5px 1.5px 3px rgba(0, 0, 0, 0.5), 
+    inset -1px -1px 1px rgba(255, 255, 255, 0.03);
+
+  --secondary-bg: #243041;
+  --secondary-border: rgba(255, 255, 255, 0.04);
+  --secondary-shadow: 
+    inset 1px 1px 1px rgba(255, 255, 255, 0.06), 
+    inset -1px -1px 2.5px rgba(0, 0, 0, 0.4), 
+    0 6px 12px -3px rgba(0, 0, 0, 0.25);
+
+  --pill-bg: #293548;
+  --pill-border: rgba(255, 255, 255, 0.04);
+  --pill-shadow: 
+    inset 1px 1px 1px rgba(255, 255, 255, 0.08), 
+    inset -0.75px -0.75px 1.5px rgba(0, 0, 0, 0.45);
+
+  --btn-sec-bg: #243041;
+  --btn-sec-color: #F8FAFC;
+  --btn-sec-border: rgba(255, 255, 255, 0.04);
+  --btn-sec-shadow: 
+    inset 1px 1px 1px rgba(255, 255, 255, 0.06), 
+    inset -1px -1px 2px rgba(0, 0, 0, 0.4);
+
+  --main-terminal-bg: rgba(30, 41, 59, 0.7);
+}
+
+body.light {
+  --bg-color: #F1F5F9;
+  --text-main: #0F172A;
+  --card-bg: #FFFFFF;
+  --card-border: rgba(15, 23, 42, 0.08);
+  --card-shadow: 
+    inset 1px 1px 1.5px rgba(255, 255, 255, 0.95), 
+    inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.06), 
+    0 8px 16px -4px rgba(0, 0, 0, 0.08), 
+    0 4px 6px -2px rgba(0, 0, 0, 0.04);
+
+  --inset-bg: #F8FAFC;
+  --inset-border: rgba(15, 23, 42, 0.04);
+  --inset-shadow: 
+    inset 1.5px 1.5px 3px rgba(0, 0, 0, 0.04), 
+    inset -1px -1px 1px rgba(255, 255, 255, 0.85);
+
+  --secondary-bg: #F8FAFC;
+  --secondary-border: rgba(15, 23, 42, 0.06);
+  --secondary-shadow: 
+    inset 1px 1px 1px rgba(255, 255, 255, 0.8), 
+    inset -1px -1px 2.5px rgba(0, 0, 0, 0.06), 
+    0 6px 12px -3px rgba(0, 0, 0, 0.08);
+
+  --pill-bg: #E2E8F0;
+  --pill-border: rgba(15, 23, 42, 0.04);
+  --pill-shadow: 
+    inset 1px 1px 1px rgba(255, 255, 255, 0.75), 
+    inset -0.75px -0.75px 1.5px rgba(0, 0, 0, 0.06);
+
+  --btn-sec-bg: #E2E8F0;
+  --btn-sec-color: #0F172A;
+  --btn-sec-border: rgba(15, 23, 42, 0.05);
+  --btn-sec-shadow: 
+    inset 1px 1px 1.5px rgba(255, 255, 255, 0.82), 
+    inset -1px -1px 2px rgba(0, 0, 0, 0.05);
+
+  --main-terminal-bg: rgba(248, 250, 252, 0.85);
+}
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* Strict operational brand colors */
-  --color-brand-bg: #0B1220;
-  --color-brand-surface: #111827;
-  --color-brand-card: #1E293B;
+  /* Strict operational brand colors mapped to dynamic variables */
+  --color-brand-bg: var(--bg-color);
+  --color-brand-surface: var(--inset-bg);
+  --color-brand-card: var(--card-bg);
   --color-brand-accent: #06B6D4;
   --color-brand-accent-glow: rgba(6, 182, 212, 0.15);
   --color-brand-emerald: #10B981;
@@ -16,49 +96,39 @@
 
 body {
   font-family: 'Inter', var(--font-sans);
-  background-color: #0B1220;
-  color: #F8FAFC;
+  background-color: var(--bg-color);
+  color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 /* Claymorphic shadows and tactile layer depths */
 .clay-card {
-  background: #1E293B;
-  border: 1px solid rgba(255, 255, 255, 0.05); /* Soft highlight on top edge */
-  box-shadow: 
-    inset 1px 1px 1.5px rgba(255, 255, 255, 0.08), 
-    inset -1.5px -1.5px 3px rgba(0, 0, 0, 0.45), 
-    0 8px 16px -4px rgba(0, 0, 0, 0.35), 
-    0 4px 6px -2px rgba(0, 0, 0, 0.25);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
   border-radius: 1.15rem;
 }
 
 .clay-card-inset {
-  background: #0F172A;
-  border: 1px solid rgba(255, 255, 255, 0.02);
-  box-shadow: 
-    inset 1.5px 1.5px 3px rgba(0, 0, 0, 0.5), 
-    inset -1px -1px 1px rgba(255, 255, 255, 0.03);
+  background: var(--inset-bg);
+  border: 1px solid var(--inset-border);
+  box-shadow: var(--inset-shadow);
   border-radius: 0.85rem;
 }
 
 .clay-card-secondary {
-  background: #243041;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  box-shadow: 
-    inset 1px 1px 1px rgba(255, 255, 255, 0.06), 
-    inset -1px -1px 2.5px rgba(0, 0, 0, 0.4), 
-    0 6px 12px -3px rgba(0, 0, 0, 0.25);
+  background: var(--secondary-bg);
+  border: 1px solid var(--secondary-border);
+  box-shadow: var(--secondary-shadow);
   border-radius: 0.85rem;
 }
 
 .clay-pill {
-  background: #293548;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  box-shadow: 
-    inset 1px 1px 1px rgba(255, 255, 255, 0.08), 
-    inset -0.75px -0.75px 1.5px rgba(0, 0, 0, 0.45);
+  background: var(--pill-bg);
+  border: 1px solid var(--pill-border);
+  box-shadow: var(--pill-shadow);
   border-radius: 9999px;
 }
 
@@ -111,18 +181,16 @@ body {
 }
 
 .clay-button-secondary {
-  background: #243041;
-  color: #F8FAFC;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  box-shadow: 
-    inset 1px 1px 1px rgba(255, 255, 255, 0.06), 
-    inset -1px -1px 2px rgba(0, 0, 0, 0.4);
+  background: var(--btn-sec-bg);
+  color: var(--btn-sec-color);
+  border: 1px solid var(--btn-sec-border);
+  box-shadow: var(--btn-sec-shadow);
   border-radius: 0.75rem;
   transition: all 120ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .clay-button-secondary:active {
   transform: scale(0.97) translateY(1px);
-  background: #1E293B;
+  background: var(--card-bg);
 }
 
 /* Custom interactive active state */
@@ -193,4 +261,166 @@ body {
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ----------------------------------------------------
+   High-Fidelity Automated Light Theme Overrides
+   ---------------------------------------------------- */
+body.light {
+  background-color: var(--bg-color) !important;
+  color: var(--text-main) !important;
+}
+
+/* Dynamic Background Attribute Catch-Alls using Substring Wildcards */
+body.light [class*="bg-[#0B1220]"] {
+  background-color: var(--bg-color) !important;
+}
+body.light [class*="bg-[#111827]"] {
+  background-color: var(--inset-bg) !important;
+}
+body.light [class*="bg-[#1E293B]"] {
+  background-color: var(--card-bg) !important;
+}
+body.light [class*="bg-[#0F172A]"] {
+  background-color: var(--secondary-bg) !important;
+}
+body.light [class*="bg-[#1E293B]/20"] {
+  background-color: rgba(15, 23, 42, 0.05) !important;
+}
+body.light [class*="bg-[#1E293B]/40"] {
+  background-color: rgba(15, 23, 42, 0.1) !important;
+}
+body.light [class*="bg-[#1E293B]/55"] {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+body.light [class*="bg-[#1E293B]/70"] {
+  background-color: rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Solid element style adjustments */
+body.light .clay-card {
+  background: var(--card-bg) !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  box-shadow: 
+    0 10px 20px -5px rgba(15, 23, 42, 0.06), 
+    0 4px 6px -3px rgba(15, 23, 42, 0.04),
+    inset 1px 1px 1.5px rgba(255, 255, 255, 0.95) !important;
+}
+
+body.light .clay-card-inset {
+  background: var(--inset-bg) !important;
+  border: 1px solid rgba(15, 23, 42, 0.05) !important;
+  box-shadow: inset 1px 1px 3px rgba(15, 23, 42, 0.06) !important;
+}
+
+body.light .clay-card-secondary {
+  background: var(--secondary-bg) !important;
+  border: 1px solid rgba(15, 23, 42, 0.06) !important;
+  box-shadow: 0 4px 8px -2px rgba(15, 23, 42, 0.03) !important;
+}
+
+body.light .clay-pill {
+  background: var(--pill-bg) !important;
+  border: 1px solid rgba(15, 23, 42, 0.06) !important;
+  box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.8) !important;
+}
+
+body.light header,
+body.light nav {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Global Elements Fallback - Force rich slate value by default */
+body.light h1,
+body.light h2,
+body.light h3,
+body.light h4,
+body.light p,
+body.light li,
+body.light label,
+body.light b,
+body.light small,
+body.light code {
+  color: #1E293B; /* Soft black default */
+}
+
+/* Aggressive Class-based Text Overrides (Ensures light fonts turn high-contrast dark gray) */
+body.light [class*="text-white"],
+body.light [class*="text-slate-100"],
+body.light [class*="text-slate-250"],
+body.light [class*="text-slate-200"],
+body.light [class*="text-slate-300"],
+body.light [class*="text-slate-350"],
+body.light [class*="text-slate-400"],
+body.light [class*="text-slate-500"],
+body.light [class*="text-[#F8FAFC]"],
+body.light .text-white,
+body.light .text-slate-100,
+body.light .text-slate-200,
+body.light .text-slate-300,
+body.light .text-slate-350,
+body.light .text-slate-400,
+body.light .text-slate-500 {
+  color: #0F172A !important; /* Forces rich charcoal dark ink */
+}
+
+body.light [class*="text-[#94A3B8]"] {
+  color: #475569 !important; /* Muted Slate-600 */
+}
+
+body.light [class*="border-slate-800"],
+body.light [class*="border-slate-850"],
+body.light [class*="border-slate-805"],
+body.light [class*="border-slate-700"] {
+  border-color: rgba(15, 23, 42, 0.07) !important;
+}
+
+/* Retain high-affinity status tags correctly colored for warnings but dark text background */
+body.light .text-cyan-400,
+body.light [class*="text-[#06B6D4]"] {
+  color: #0891B2 !important; /* Darker Cyan */
+}
+body.light .text-emerald-400,
+body.light [class*="text-[#10B981]"] {
+  color: #059669 !important; /* Darker Emerald */
+}
+body.light .text-red-500,
+body.light [class*="text-red-500"] {
+  color: #DC2626 !important; /* Crimson red */
+}
+body.light .text-amber-500,
+body.light [class*="text-amber-500"] {
+  color: #D97706 !important; /* Darker amber */
+}
+
+/* Controls, dropdowns, forms readability */
+body.light select,
+body.light textarea,
+body.light input {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border: 1px solid #CBD5E1 !important;
+}
+
+body.light select option {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+body.light ::placeholder {
+  color: #64748B !important;
+}
+
+/* Force primary CTA labels to stay perfectly readable values */
+body.light .clay-button-primary,
+body.light .clay-button-primary span,
+body.light .clay-button-emerald,
+body.light .clay-button-emerald span,
+body.light .clay-button-amber,
+body.light .clay-button-amber span {
+  color: #0F172A !important;
+}
+
+body.light .animate-scan::after {
+  background: linear-gradient(to right, transparent, #0891B2, transparent) !important;
 }
