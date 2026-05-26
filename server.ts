@@ -112,7 +112,9 @@ app.post("/api/diagnose", async (req, res) => {
     fallbackPartId = "CW-TC";
   }
 
-  const hasKey = !!process.env.GEMINI_API_KEY;
+  const hasGeminiKey = !!process.env.GEMINI_API_KEY;
+  const hasOpenaiKey = !!process.env.OPENAI_API_KEY;
+  const hasKey = hasGeminiKey || hasOpenaiKey;
 
   if (!hasKey) {
     // Elegant fallback simulation is key for flawless offline evaluations and quick startup experiences
@@ -196,6 +198,99 @@ app.post("/api/diagnose", async (req, res) => {
   }
 
   try {
+    if (hasOpenaiKey && !hasGeminiKey) {
+      const key = process.env.OPENAI_API_KEY!;
+      const isOpenRouter = key.startsWith("sk-or-");
+      const url = isOpenRouter 
+        ? "https://openrouter.ai/api/v1/chat/completions" 
+        : "https://api.openai.com/v1/chat/completions";
+      
+      const model = isOpenRouter ? "google/gemini-2.1-flash" : "gpt-4o-mini";
+
+      const prompt = `You are an autonomous engineering diagnostic assistant for Railway Power Grid Sector 4.
+Use the following SYSTEM MANUAL CONTEXT as your absolute ground truth:
+${SYSTEM_MANUAL_CONTEXT}
+
+When analyzing field issues (both via image and text description):
+1. Combine the technician text notes, potential audio transcripts, and inspection photos.
+2. Formulate a technical "diagnosis" explanation in nice, clean Markdown.
+3. Automatically identify if a key spare part mentioned in the manual is needed (e.g. TR-88-M, CS-99, OV-12, VF-400, CW-TC, CW-HW). If so, set tool_dispatch.tool_called to true and populate dispatched_part, delivery_eta ("ETA 45 mins") and courier_status.
+4. Fill all fields of the response strictly in JSON format matching the specified schema.
+
+You MUST respond ONLY with a raw, valid JSON object block. Do NOT include markdown code-block wrappers like \`\`\`json.
+
+JSON Schema structure expected:
+{
+  "diagnosis": "Markdown string of failure analysis and findings",
+  "incident_timeline": ["Event 1 sequence", "Event 2 sequence", "Event 3 sequence"],
+  "severity_info": {
+    "severity": "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",
+    "downtime_risk": "LOW" | "MEDIUM" | "HIGH",
+    "human_escalation_required": boolean
+  },
+  "missing_evidence": ["Missing items list"],
+  "tool_dispatch": {
+    "tool_called": boolean,
+    "dispatched_part": "part name and code",
+    "delivery_eta": "delivery timeframe",
+    "courier_status": "courier status message"
+  },
+  "repair_guidance": ["Step 1 LOTO/repair", "Step 2 LOTO/repair"],
+  "escalation_summary": "Summary supervisor notes",
+  "shift_report": {
+    "incident_id": "ticket index (e.g., INC-2026-X12)",
+    "summary": "shift report title",
+    "action_taken": "triage summary actions",
+    "recommendations": "preventive suggestions",
+    "pending_risks": "unresolved risks"
+  }
+}`;
+
+      const messages: any[] = [
+        { role: "system", content: prompt }
+      ];
+
+      const userContent: any[] = [
+        { type: "text", text: `Technician Field Report / Symptoms:\n"${text_description}"` }
+      ];
+
+      if (image_base64) {
+        userContent.push({
+          type: "image_url",
+          image_url: {
+            url: image_base64.startsWith("data:") ? image_base64 : `data:image/jpeg;base64,${image_base64}`
+          }
+        });
+      }
+
+      messages.push({ role: "user", content: userContent });
+
+      const fetchResponse = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${key}`,
+          ...(isOpenRouter ? { "HTTP-Referer": "https://ai.studio/build", "X-Title": "Grid Guard Terminal" } : {})
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: messages,
+          response_format: { type: "json_object" },
+          temperature: 0.2
+        })
+      });
+
+      if (!fetchResponse.ok) {
+        const errorText = await fetchResponse.text();
+        throw new Error(`OpenAI API status error: ${fetchResponse.status} - ${errorText}`);
+      }
+
+      const rawJson = await fetchResponse.json();
+      const rawText = rawJson.choices?.[0]?.message?.content || "{}";
+      const reportData = JSON.parse(rawText.trim());
+      return res.json(reportData);
+    }
+
     const ai = getGeminiClient();
 
     const systemInstruction = `

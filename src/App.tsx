@@ -1609,71 +1609,71 @@ export default function App() {
 
         </main>
 
-        {/* Floating Bottom Navigator Tab menu bar */}
-        <nav className="absolute bottom-0 left-0 right-0 z-30 bg-[#111827]/95 border-t border-slate-850 py-2.5 px-3 flex justify-around items-center select-none backdrop-blur-md">
+        {/* Floating Bottom Navigator Tab menu bar - Fluid & Scroll-free on all mobile sizes */}
+        <nav className="absolute bottom-0 left-0 right-0 z-30 bg-[#111827]/95 border-t border-slate-850 py-2 px-1 flex justify-around items-center select-none backdrop-blur-md gap-0.5 md:gap-1">
           
           <button
             onClick={() => setActiveTab("dashboard")}
-            className={`flex flex-col items-center gap-1 text-[10px] font-mono font-medium relative transition-colors ${
+            className={`flex-1 min-w-0 flex flex-col items-center justify-center gap-1 text-[9px] min-[375px]:text-[10px] font-mono font-medium relative transition-colors py-1 ${
               activeTab === "dashboard" ? "text-cyan-400" : "text-slate-400 hover:text-white"
             }`}
           >
-            <Compass className="w-4 h-4" />
-            <span>Dashboard</span>
+            <Compass className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate w-full text-center">Dashboard</span>
             {activeTab === "dashboard" && (
-              <span className="absolute -bottom-1 h-0.5 w-4 bg-cyan-400 rounded-full" />
+              <span className="absolute -bottom-1.5 h-0.5 w-4 bg-cyan-400 rounded-full" />
             )}
           </button>
 
           <button
             onClick={() => setActiveTab("intake")}
-            className={`flex flex-col items-center gap-1 text-[10px] font-mono font-medium relative transition-colors ${
+            className={`flex-1 min-w-0 flex flex-col items-center justify-center gap-1 text-[9px] min-[375px]:text-[10px] font-mono font-medium relative transition-colors py-1 ${
               activeTab === "intake" ? "text-cyan-400" : "text-slate-400 hover:text-white"
             }`}
           >
-            <Plus className="w-4 h-4" />
-            <span>Intake</span>
+            <Plus className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate w-full text-center">Intake</span>
             {activeTab === "intake" && (
-              <span className="absolute -bottom-1 h-0.5 w-4 bg-cyan-400 rounded-full" />
+              <span className="absolute -bottom-1.5 h-0.5 w-4 bg-cyan-400 rounded-full" />
             )}
           </button>
 
           <button
             onClick={() => setActiveTab("analysis")}
-            className={`flex flex-col items-center gap-1 text-[10px] font-mono font-medium relative transition-colors ${
+            className={`flex-1 min-w-0 flex flex-col items-center justify-center gap-1 text-[9px] min-[375px]:text-[10px] font-mono font-medium relative transition-colors py-1 ${
               activeTab === "analysis" ? "text-cyan-400" : "text-slate-400 hover:text-white"
             }`}
           >
-            <Cpu className="w-4 h-4" />
-            <span>Autopsy</span>
+            <Cpu className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate w-full text-center">Autopsy</span>
             {activeTab === "analysis" && (
-              <span className="absolute -bottom-1 h-0.5 w-4 bg-cyan-400 rounded-full" />
+              <span className="absolute -bottom-1.5 h-0.5 w-4 bg-cyan-400 rounded-full" />
             )}
           </button>
 
           <button
             onClick={() => setActiveTab("tools")}
-            className={`flex flex-col items-center gap-1 text-[10px] font-mono font-medium relative transition-colors ${
+            className={`flex-1 min-w-0 flex flex-col items-center justify-center gap-1 text-[9px] min-[375px]:text-[10px] font-mono font-medium relative transition-colors py-1 ${
               activeTab === "tools" ? "text-cyan-400" : "text-slate-400 hover:text-white"
             }`}
           >
-            <Wrench className="w-4 h-4" />
-            <span>SOP / Tools</span>
+            <Wrench className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate w-full text-center">SOP/Tools</span>
             {activeTab === "tools" && (
-              <span className="absolute -bottom-1 h-0.5 w-4 bg-cyan-400 rounded-full" />
+              <span className="absolute -bottom-1.5 h-0.5 w-4 bg-cyan-400 rounded-full" />
             )}
           </button>
 
           <button
             onClick={() => setActiveTab("reports")}
-            className={`flex flex-col items-center gap-1 text-[10px] font-mono font-medium relative transition-colors ${
+            className={`flex-1 min-w-0 flex flex-col items-center justify-center gap-1 text-[9px] min-[375px]:text-[10px] font-mono font-medium relative transition-colors py-1 ${
               activeTab === "reports" ? "text-cyan-400" : "text-slate-400 hover:text-white"
             }`}
           >
-            <User className="w-4 h-4" />
-            <span>Admin</span>
+            <User className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate w-full text-center">Admin</span>
             {activeTab === "reports" && (
-              <span className="absolute -bottom-1 h-0.5 w-4 bg-cyan-400 rounded-full" />
+              <span className="absolute -bottom-1.5 h-0.5 w-4 bg-cyan-400 rounded-full" />
             )}
           </button>
 
