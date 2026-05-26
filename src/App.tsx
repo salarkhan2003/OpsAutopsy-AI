@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, ChangeEvent, DragEvent } from "react";
+import { jsPDF } from "jspdf";
 import { 
   Camera, 
   Wrench, 
@@ -40,7 +41,12 @@ import {
   Compass,
   Database,
   Sun,
-  Moon
+  Moon,
+  X,
+  Download,
+  HelpCircle,
+  Edit3,
+  CheckSquare
 } from "lucide-react";
 
 import { PRESET_SCENARIOS } from "./scenarios";
@@ -59,24 +65,40 @@ export default function App() {
   const [onboardStep, setOnboardStep] = useState<number>(0);
 
   // Active Screen / Bottom Tab Management
-  // Tabs: dashboard | intake | analysis | tools | reports
-  const [activeTab, setActiveTab] = useState<"dashboard" | "intake" | "analysis" | "tools" | "reports">("dashboard");
+  // Tabs: dashboard | intake | analysis | tools | reports | guide
+  const [activeTab, setActiveTab] = useState<"dashboard" | "intake" | "analysis" | "tools" | "reports" | "guide">("dashboard");
+  const [previousTab, setPreviousTab] = useState<string>("dashboard");
 
   // Form State
-  const [description, setDescription] = useState<string>("");
+  const [description, setDescription] = useState<string>(() => {
+    return localStorage.getItem("ops_description") || "";
+  });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [selectedAsset, setSelectedAsset] = useState<string>("TX-400 Transformer");
-  const [locationTag, setLocationTag] = useState<string>("Grid Station Sector-4");
+  const [selectedAsset, setSelectedAsset] = useState<string>(() => {
+    return localStorage.getItem("ops_selected_asset") || "TX-400 Transformer";
+  });
+  const [locationTag, setLocationTag] = useState<string>(() => {
+    return localStorage.getItem("ops_location_tag") || "Grid Station Sector-4";
+  });
   const [loading, setLoading] = useState<boolean>(false);
   const [progressLog, setProgressLog] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Simulated & Real Diagnostic Output Dossier state
-  const [results, setResults] = useState<DiagnosticResult | null>(null);
+  const [results, setResults] = useState<DiagnosticResult | null>(() => {
+    const cached = localStorage.getItem("ops_diagnostic_results_v2");
+    return cached ? JSON.parse(cached) : null;
+  });
 
   // Checkboxes trackers for operations
-  const [checkedSOPSteps, setCheckedSOPSteps] = useState<Record<number, boolean>>({});
-  const [checkedEvidence, setCheckedEvidence] = useState<Record<number, boolean>>({});
+  const [checkedSOPSteps, setCheckedSOPSteps] = useState<Record<number, boolean>>(() => {
+    const cached = localStorage.getItem("ops_checked_sop");
+    return cached ? JSON.parse(cached) : {};
+  });
+  const [checkedEvidence, setCheckedEvidence] = useState<Record<number, boolean>>(() => {
+    const cached = localStorage.getItem("ops_checked_evidence");
+    return cached ? JSON.parse(cached) : {};
+  });
   const [copiedShiftLog, setCopiedShiftLog] = useState<boolean>(false);
   
   // Real-time camera & speech modules states
@@ -87,8 +109,12 @@ export default function App() {
 
   // Tool dispatch and inventory query
   const [inventoryQuery, setInventoryQuery] = useState<string>("");
-  const [autonomousDispatchTriggered, setAutonomousDispatchTriggered] = useState<boolean>(false);
-  const [isEscalated, setIsEscalated] = useState<boolean>(false);
+  const [autonomousDispatchTriggered, setAutonomousDispatchTriggered] = useState<boolean>(() => {
+    return localStorage.getItem("ops_dispatch_triggered") === "true";
+  });
+  const [isEscalated, setIsEscalated] = useState<boolean>(() => {
+    return localStorage.getItem("ops_is_escalated") === "true";
+  });
   const [escalationChannel, setEscalationChannel] = useState<string>("Grid Controller Level 2");
 
   // Profile preferences
@@ -98,6 +124,18 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     return localStorage.getItem("ops_autopsy_theme") !== "light";
   });
+
+  // Dynamic user session metrics
+  const [technicianName, setTechnicianName] = useState<string>(() => {
+    return localStorage.getItem("ops_technician_name") || "Salar Khan";
+  });
+  const [isEditingName, setIsEditingName] = useState<boolean>(false);
+  const [tempName, setTempName] = useState<string>("");
+  const [onboardName, setOnboardName] = useState<string>("");
+
+  // Guide and Interactive tour modalities
+  const [showGuideModal, setShowGuideModal] = useState<boolean>(false);
+  const [guideStep, setGuideStep] = useState<number>(0);
 
   // Keep theme synchronized with the body node
   useEffect(() => {
@@ -110,6 +148,47 @@ export default function App() {
     }
   }, [isDarkMode]);
 
+  // Handle automatic LocalStorage tracking for persistence
+  useEffect(() => {
+    localStorage.setItem("ops_description", description);
+  }, [description]);
+
+  useEffect(() => {
+    localStorage.setItem("ops_selected_asset", selectedAsset);
+  }, [selectedAsset]);
+
+  useEffect(() => {
+    localStorage.setItem("ops_location_tag", locationTag);
+  }, [locationTag]);
+
+  useEffect(() => {
+    if (results) {
+      localStorage.setItem("ops_diagnostic_results_v2", JSON.stringify(results));
+    } else {
+      localStorage.removeItem("ops_diagnostic_results_v2");
+    }
+  }, [results]);
+
+  useEffect(() => {
+    localStorage.setItem("ops_checked_sop", JSON.stringify(checkedSOPSteps));
+  }, [checkedSOPSteps]);
+
+  useEffect(() => {
+    localStorage.setItem("ops_checked_evidence", JSON.stringify(checkedEvidence));
+  }, [checkedEvidence]);
+
+  useEffect(() => {
+    localStorage.setItem("ops_dispatch_triggered", autonomousDispatchTriggered ? "true" : "false");
+  }, [autonomousDispatchTriggered]);
+
+  useEffect(() => {
+    localStorage.setItem("ops_is_escalated", isEscalated ? "true" : "false");
+  }, [isEscalated]);
+
+  useEffect(() => {
+    localStorage.setItem("ops_technician_name", technicianName);
+  }, [technicianName]);
+
   // References
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -117,7 +196,7 @@ export default function App() {
 
   // Dynamic user session metrics
   const defaultTechnician = {
-    name: "S. Patan",
+    name: technicianName,
     id: "TECH-5092",
     sector: "Sector-4 High Voltage Grid",
     role: "Lead Field Operations Engineer",
@@ -483,6 +562,223 @@ export default function App() {
     setTimeout(() => setCopiedShiftLog(false), 2000);
   };
 
+  const downloadStyledReport = () => {
+    if (!results) return;
+    const incidentId = results.shift_report.incident_id || "INC-9902";
+    const title = `GRID_GUARD_INCIDENT_${incidentId}_REPORT.pdf`;
+
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4"
+    });
+
+    // Top Brand Border line
+    doc.setFillColor(8, 145, 178); // cyan blue theme color: #0891b2
+    doc.rect(0, 0, 210, 6, "F");
+
+    // Header Title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.setTextColor(15, 23, 42); // slate 900
+    doc.text("GRID GUARD AUDIT DOSSIER", 15, 22);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139); // slate 500
+    doc.text("emergency diagnostic & secure lockout-tagout (LOTO) system".toUpperCase(), 15, 27);
+
+    // Separator line
+    doc.setDrawColor(226, 232, 240); // slate 200
+    doc.setLineWidth(0.4);
+    doc.line(15, 31, 195, 31);
+
+    // Metadata Grid Background Card
+    doc.setFillColor(248, 250, 252); // slate 50
+    doc.rect(15, 35, 180, 52, "F");
+    doc.setDrawColor(226, 232, 240);
+    doc.rect(15, 35, 180, 52, "D");
+
+    // Metadata Values
+    doc.setFontSize(8.5);
+    doc.setTextColor(15, 23, 42);
+    
+    // Column 1
+    doc.setFont("helvetica", "bold");
+    doc.text("INCIDENT ID:", 20, 41);
+    doc.setFont("helvetica", "normal");
+    doc.text(incidentId, 70, 41);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("ASSIGNED OPERATIVE:", 20, 47);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${technicianName} (${defaultTechnician.id})`, 70, 47);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("SECURITY GRADE:", 20, 53);
+    doc.setFont("helvetica", "normal");
+    doc.text("LEVEL-4 CRITICAL SECURE", 70, 53);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("TARGET ASSET:", 20, 59);
+    doc.setFont("helvetica", "normal");
+    doc.text(selectedAsset, 70, 59);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("SECTOR LOCATION:", 20, 65);
+    doc.setFont("helvetica", "normal");
+    doc.text(locationTag, 70, 65);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("LOTO COMPLIANCE RATING:", 20, 71);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${sopCompliancePct}% STANDARD LOTO SIGN-OFF`, 70, 71);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("ALARM ESCALATION:", 20, 77);
+    doc.setFont("helvetica", "normal");
+    doc.text(isEscalated ? (escalationChannel || "Level 2 Controller") : "STANDARD ENVELOPE (OFF-GRID)", 70, 77);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("STORAGE SYSTEM STATUS:", 20, 83);
+    doc.setFont("helvetica", "normal");
+    doc.text(offlineMode ? "ACTIVE (OFFLINE LOCAL RECOVERY)" : "ONLINE CONTROL PLANE CONNECTED", 70, 83);
+
+    // Section 1: Damage Analysis
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10.5);
+    doc.setTextColor(8, 145, 178); // Blue
+    doc.text("01 // INCIDENT ANALYSIS TRIAGE SUMMARY", 15, 96);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(51, 65, 85); // Slate 700
+
+    const damageLines = doc.splitTextToSize(results.analysed_damage || "No damage metrics compiled.", 180);
+    doc.text(damageLines, 15, 102);
+
+    // Section 2: Repair Guidance (SOP Checklists)
+    const sopYStart = 106 + (damageLines.length * 4.5);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10.5);
+    doc.setTextColor(8, 145, 178);
+    doc.text("02 // TROUBLESHOOTING REPAIR & LOTO COMPLIANCE STEPS", 15, sopYStart);
+
+    doc.setFontSize(8.5);
+    let currentY = sopYStart + 6;
+    (results.repair_guidance || []).forEach((step, idx) => {
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(15, 23, 42);
+      const prefix = `[STAGE 0${idx + 1}] `;
+      doc.text(prefix, 15, currentY);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(71, 85, 105);
+      const isChecked = checkedSOPSteps[idx];
+      const statusText = isChecked ? " [SAFETY SIGNED-OFF]" : " [PENDING VERIFICATION]";
+      
+      const stepText = step + statusText;
+      const wrappedStep = doc.splitTextToSize(stepText, 145);
+      
+      doc.text(wrappedStep, 35, currentY);
+      
+      if (isChecked) {
+        doc.setTextColor(16, 185, 129); // emerald green
+        doc.setFont("helvetica", "bold");
+        doc.text("✔ APPROVED", 170, currentY);
+      } else {
+        doc.setTextColor(239, 68, 68); // red
+        doc.setFont("helvetica", "bold");
+        doc.text("🗙 PENDING", 170, currentY);
+      }
+      
+      currentY += (wrappedStep.length * 4.5) + 1.5;
+    });
+
+    currentY += 1.5;
+    doc.setDrawColor(226, 232, 240);
+    doc.line(15, currentY, 195, currentY);
+    currentY += 5;
+
+    // Dispatch Details & Logistics
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10.5);
+    doc.setTextColor(8, 145, 178);
+    doc.text("03 // LOGISTICS SECURE DEPOT SPARES DISPATCH", 15, currentY);
+    
+    currentY += 5.5;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    doc.setTextColor(15, 23, 42);
+    doc.text("DISPATCHED COMPONENT:", 15, currentY);
+    doc.setFont("helvetica", "normal");
+    doc.text(results.dispatch_advice?.component || "None Required", 65, currentY);
+    
+    currentY += 4.5;
+    doc.setFont("helvetica", "bold");
+    doc.text("DISPATCH SPEED / ETA_EST:", 15, currentY);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${results.dispatch_advice?.speed || "Standard"} / ETA: ${results.dispatch_advice?.eta_estimation || "Immediate"}`, 65, currentY);
+    
+    currentY += 4.5;
+    doc.setFont("helvetica", "bold");
+    doc.text("LOGISTICS PIPELINE STATUS:", 15, currentY);
+    doc.setFont("helvetica", "normal");
+    doc.text(autonomousDispatchTriggered ? "DISPATCHED FROM GRID-HQ" : "PENDING SUPERVISOR RE-VERIFICATION", 65, currentY);
+
+    // Timeline Logs
+    currentY += 7;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10.5);
+    doc.setTextColor(8, 145, 178);
+    doc.text("04 // ENTRANTS TIMELINE PROGRESS LOG", 15, currentY);
+
+    currentY += 5;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
+    
+    (results.timeline || []).slice(0, 5).forEach((event) => {
+      const wrappedEvent = doc.splitTextToSize(`• ${event}`, 175);
+      doc.text(wrappedEvent, 15, currentY);
+      currentY += (wrappedEvent.length * 4) + 1;
+    });
+
+    // Checksums and validation
+    currentY += 3;
+    doc.setDrawColor(226, 232, 240);
+    doc.line(15, currentY, 195, currentY);
+    currentY += 5;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text("HANDOVER CHECKSUM HASH:", 15, currentY);
+    doc.setFont("helvetica", "normal");
+    doc.text(`SHA256-${Math.random().toString(36).substring(2, 10).toUpperCase()}-GRIDGUARD-SECURE-CRYPTO-PWA-v3.0`, 65, currentY);
+
+    currentY += 4;
+    doc.setFont("helvetica", "bold");
+    doc.text("TIMESTAMP REPRODUCED:", 15, currentY);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${new Date().toISOString().replace('T', ' ').substring(0, 19)} UTC`, 65, currentY);
+
+    // Signatures
+    currentY += 15;
+    doc.setDrawColor(148, 163, 184); // slate 400
+    doc.line(15, currentY, 80, currentY);
+    doc.line(130, currentY, 195, currentY);
+
+    currentY += 3.5;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`OPERATIVE SIGNATURE (${technicianName})`, 15, currentY);
+    doc.text("SUPERVISOR COUNTER-SIGNATURE", 130, currentY);
+
+    doc.save(title);
+  };
+
   // SOP Progress Math
   const totalSOPSteps = results?.repair_guidance?.length || 0;
   const compliantSOPSteps = Object.values(checkedSOPSteps).filter(Boolean).length;
@@ -493,6 +789,8 @@ export default function App() {
     if (onboardStep < 2) {
       setOnboardStep(prev => prev + 1);
     } else {
+      const finalName = onboardName.trim();
+      setTechnicianName(finalName || "Salar Khan");
       localStorage.setItem("ops_autopsy_onboarded_v2", "true");
       setIsOnboarded(true);
     }
@@ -501,6 +799,16 @@ export default function App() {
   const handleClearTutorialState = () => {
     localStorage.removeItem("ops_autopsy_onboarded_v2");
     localStorage.removeItem("ops_autopsy_theme");
+    localStorage.removeItem("ops_description");
+    localStorage.removeItem("ops_selected_asset");
+    localStorage.removeItem("ops_location_tag");
+    localStorage.removeItem("ops_diagnostic_results_v2");
+    localStorage.removeItem("ops_checked_sop");
+    localStorage.removeItem("ops_checked_evidence");
+    localStorage.removeItem("ops_dispatch_triggered");
+    localStorage.removeItem("ops_is_escalated");
+    localStorage.removeItem("ops_technician_name");
+
     setIsDarkMode(true);
     setIsOnboarded(false);
     setOnboardStep(0);
@@ -510,6 +818,11 @@ export default function App() {
     setDescription("");
     setImagePreview(null);
     setActiveTab("dashboard");
+    setTechnicianName("Salar Khan");
+    setCheckedSOPSteps({});
+    setCheckedEvidence({});
+    setAutonomousDispatchTriggered(false);
+    setIsEscalated(false);
   };
 
   // =======================================
@@ -633,15 +946,27 @@ export default function App() {
                 <p className="text-xs text-[#94A3B8] leading-relaxed">
                   Instantly verify warehouse stock levels, request protective gear, dispatch emergency components automatically, and generate exportable supervisor shift registers.
                 </p>
-                <div className="p-3.5 rounded-xl bg-[#1E293B]/70 border border-slate-800 space-y-2.5 text-[10px] text-slate-350 font-mono">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0" />
-                    <span>Real-time stock reservation loops (CS-99, CW-TC)</span>
+                
+                {/* Profile initialization name input with enter and skip hooks */}
+                <div className="p-3.5 rounded-xl bg-[#1E293B]/70 border border-slate-800 space-y-2.5 font-sans">
+                  <span className="text-[9.5px] font-mono tracking-widest text-[#06B6D4] font-bold uppercase block">
+                    CONFIGURE OPERATIVE IDENTITY
+                  </span>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-400 block font-medium">Technician Name (Optional)</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={onboardName}
+                        onChange={(e) => setOnboardName(e.target.value)}
+                        placeholder="Enter your name (e.g. Salar Khan)"
+                        className="flex-grow px-3 py-1.5 bg-[#0F172A] border border-slate-800 rounded-lg text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+                      />
+                    </div>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0" />
-                    <span>Step-by-step SOP checklist validation compliance</span>
-                  </div>
+                  <p className="text-[9.5px] text-slate-500 leading-tight font-mono">
+                    *Tapping INITIALIZE binds the audit logs, safety SOP signatures, and shift register reports to this operative handle.
+                  </p>
                 </div>
               </div>
             )}
@@ -719,7 +1044,7 @@ export default function App() {
             >
               {isDarkMode ? (
                 <>
-                  <Sun className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                  <Sun className="w-2.5 h-2.5 text-amber-500 shrink-0" />
                   <span>LIGHT</span>
                 </>
               ) : (
@@ -1485,8 +1810,52 @@ export default function App() {
                   <div className="w-12 h-12 rounded-full bg-[#243041] border border-slate-800 flex items-center justify-center text-cyan-400 shrink-0 shadow-inner">
                     <User className="w-6 h-6" />
                   </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-white uppercase">{defaultTechnician.name}</h4>
+                  <div className="flex-1 min-w-0">
+                    {isEditingName ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={tempName}
+                          onChange={(e) => setTempName(e.target.value)}
+                          className="px-2 py-1 bg-[#0F172A] border border-slate-700 text-xs rounded text-white font-mono w-full focus:outline-none focus:border-cyan-500"
+                          placeholder="Technician Name"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              setTechnicianName(tempName.trim() || 'Salar Khan');
+                              setIsEditingName(false);
+                            }
+                            if (e.key === 'Escape') setIsEditingName(false);
+                          }}
+                        />
+                        <button 
+                          onClick={() => {
+                            setTechnicianName(tempName.trim() || 'Salar Khan');
+                            setIsEditingName(false);
+                          }} 
+                          className="p-1 bg-[#10B981] hover:bg-emerald-600 rounded text-[#0B1220] transition shrink-0"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => setIsEditingName(false)} 
+                          className="p-1 bg-slate-850 hover:bg-slate-800 border border-slate-750 rounded text-slate-300 transition shrink-0"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-white uppercase truncate">{defaultTechnician.name}</h4>
+                        <button 
+                          onClick={() => { setTempName(defaultTechnician.name); setIsEditingName(true); }} 
+                          className="text-slate-500 hover:text-cyan-400 p-1 rounded hover:bg-[#1E293B] transition shrink-0"
+                          title="Edit Personalization Handle"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
                     <span className="text-[9px] font-mono text-slate-400 block mt-0.5">{defaultTechnician.role}</span>
                   </div>
                 </div>
@@ -1506,6 +1875,31 @@ export default function App() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* How to Use Guide button / Trigger Card */}
+              <div className="p-4 clay-card space-y-3 relative overflow-hidden shadow">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-mono text-cyan-400 font-bold uppercase tracking-widest block font-black">OPERATIVE TOURING PORTAL</span>
+                    <h4 className="text-xs font-bold text-white font-sans">GRID GUARD COMPREHENSIVE TOUR</h4>
+                    <p className="text-[10px] text-slate-400 font-sans leading-relaxed">
+                      Visualize implementation blueprints, operational challenges fixed, and system compliance guides.
+                    </p>
+                  </div>
+                  <HelpCircle className="w-4 h-4 text-cyan-400 shrink-0 animate-pulse" />
+                </div>
+                
+                <button
+                  onClick={() => {
+                    setPreviousTab(activeTab);
+                    setActiveTab("guide");
+                  }}
+                  className="w-full py-2 bg-[#243041] hover:bg-slate-800 border border-slate-800 hover:border-slate-700 font-mono text-[10px] font-bold text-slate-200 rounded-lg flex items-center justify-center gap-1.5 uppercase transition active:scale-[0.98] cursor-pointer"
+                >
+                  <Compass className="w-3.5 h-3.5" />
+                  INITIATE SYSTEM TOUR GUIDE
+                </button>
               </div>
 
               {/* Advanced App Configurations Controls */}
@@ -1600,10 +1994,140 @@ export default function App() {
                     >
                       {copiedShiftLog ? "✓ COPIED SECURE CLOUD WORKLOG METRIC" : "COPY OPERATIONAL LOG TO BOARD"}
                     </button>
+
+                    <button
+                      onClick={downloadStyledReport}
+                      className="w-full py-2 bg-gradient-to-r from-cyan-600 to-[#0891B2] hover:brightness-110 font-mono text-[10.5px] font-bold text-white rounded-lg flex items-center justify-center gap-1.5 uppercase transition active:scale-[0.98] cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      DOWNLOAD OFFICIAL PDF REPORT
+                    </button>
                   </div>
                 )}
               </div>
 
+            </div>
+          )}
+
+          {/* ======================================= */}
+          {/* TAB 6: COMPREHENSIVE SYSTEM TOUR GUIDE  */}
+          {/* ======================================= */}
+          {activeTab === "guide" && (
+            <div className="space-y-4 animate-fade-in text-left">
+              <div className="flex justify-between items-center border-b border-slate-800/30 pb-2">
+                <button
+                  onClick={() => setActiveTab(previousTab as any || "dashboard")}
+                  className="px-3 py-1.5 bg-[#1E293B] hover:bg-[#1E293B]/80 border border-slate-800/40 hover:border-slate-800/80 rounded-md text-cyan-400 font-mono text-[10.5px] font-bold flex items-center gap-1 transition active:scale-[0.98] cursor-pointer shrink-0"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  BACK
+                </button>
+                <div className="text-[10px] font-mono text-slate-400 font-bold uppercase tracking-wider block text-right truncate">
+                  OPERATIVE COMPASS
+                </div>
+              </div>
+
+              {/* Guide Contents card */}
+              <div className="p-5 clay-card space-y-5 relative overflow-hidden">
+                <div className="border-b border-slate-800/30 pb-3">
+                  <span className="text-[9px] font-mono text-cyan-400 font-bold uppercase tracking-wider block font-black">COMPREHENSIVE MANUAL v3.0</span>
+                  <h2 className="text-base font-bold text-white font-mono uppercase tracking-wide">GRID GUARD AUTOPSY SYSTEM HANDBOOK</h2>
+                  <p className="text-[11px] text-slate-400 font-sans mt-0.5 font-bold">
+                    Emergency Diagnostic, Lockout-Tagout (LOTO) Compliance & Autonomous Parts Dispatch Core.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                      <Compass className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-bold text-white uppercase font-mono">01 // MULTIMODAL INTAKE</span>
+                  </div>
+                  <p className="text-[11.5px] text-slate-350 leading-relaxed font-sans pl-9">
+                    Field workers encounter complex grid events like circuit breaker failures and winding shorts. Use the Telemetry Ingestion screen (Intake tab) to report findings using multiple inputs:
+                  </p>
+                  <ul className="list-disc pl-14 text-[11px] text-slate-400 space-y-1">
+                    <li><strong>Detailed Observations:</strong> Manual code logs and warning symptoms.</li>
+                    <li><strong>Rear-optical Camera Feed:</strong> Direct optical inspections to isolate cracks.</li>
+                    <li><strong>Micro-Acoustic Recorder:</strong> High-precision audio transcript captures in noisy yards.</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                      <Cpu className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-bold text-white uppercase font-mono">02 // DIGITAL AUTOPSY COMPILATION</span>
+                  </div>
+                  <p className="text-[11.5px] text-slate-350 leading-relaxed font-sans pl-9">
+                    Input files feed into our server-side Gemini cognitive analysis core. The Autopsy view outputs a synthesized incident chronicle:
+                  </p>
+                  <ul className="list-disc pl-14 text-[11px] text-slate-400 space-y-1">
+                    <li><strong>Failure Timelines:</strong> Multi-stage chronological breakdown of variables.</li>
+                    <li><strong>Troubleshooting Directions:</strong> Practical, secure structural repairs.</li>
+                    <li><strong>Evidence Gap Registries:</strong> Flagging missing readings or audits needed.</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                      <Wrench className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-bold text-white uppercase font-mono">03 // LOTO AND COMPLIANCE</span>
+                  </div>
+                  <p className="text-[11.5px] text-slate-350 leading-relaxed font-sans pl-9">
+                    In high-power corridors, Lockout-Tagout (LOTO) saves lives. The SOP/Tools tab enforces safety checks:
+                  </p>
+                  <ul className="list-disc pl-14 text-[11px] text-slate-400 space-y-1">
+                    <li>AI repair steps are converted directly into active checklists.</li>
+                    <li>Operatives check off items after physical tag verification.</li>
+                    <li>Progress tracks compliance metrics bound into the final register handle.</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                      <Truck className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-bold text-white uppercase font-mono">04 // AUTONOMOUS INVENTORY & DISPATCH</span>
+                  </div>
+                  <p className="text-[11.5px] text-slate-350 leading-relaxed font-sans pl-9">
+                    Upon diagnostic output, correct spares (such as `CS-99` or `TR-88-M`) are autonomously mapped:
+                  </p>
+                  <ul className="list-disc pl-14 text-[11px] text-slate-400 space-y-1">
+                    <li>Autonomous queries run lock-reservations in nearby warehouse databases.</li>
+                    <li>Field workers see real-time driver dispatcher coordinates and courier ETAs instantly.</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-bold text-white uppercase font-mono">05 // SECURE EXPORT & PRINTABLE DOSSIER</span>
+                  </div>
+                  <p className="text-[11.5px] text-slate-350 leading-relaxed font-sans pl-9">
+                    Under standard protocol, operatives compile shifts for supervisors on the Admin screen:
+                  </p>
+                  <ul className="list-disc pl-14 text-[11px] text-slate-400 space-y-1">
+                    <li><strong>Worklog Copies:</strong> Copies structured records with cryptographically signed verification hashes.</li>
+                    <li><strong>PDF Downloads:</strong> Generates highly styled, standard-compliant physical PDF rosters with supervisor counter-signature areas.</li>
+                  </ul>
+                </div>
+
+                <div className="text-[10px] p-2 rounded bg-amber-500/10 border border-amber-500/20 text-amber-500 font-mono flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div>
+                    <strong>EDGE-HAZARD PROTOCOLS ACTIVE:</strong> This manual operates in local memory cache to ensure uninterrupted off-grid support during power corridor disconnects.
+                  </div>
+                </div>
+
+              </div>
             </div>
           )}
 
@@ -1678,6 +2202,224 @@ export default function App() {
           </button>
 
         </nav>
+
+        {/* 3D INTERACTIVE GUIDE BOARD PORTAL */}
+        {false && showGuideModal && (
+          <div className="absolute inset-0 z-50 bg-[#0B1220]/95 flex items-center justify-center p-4 backdrop-blur-sm transition-all duration-300">
+            <div className="w-full max-w-[370px] bg-[#111827] rounded-3xl border border-cyan-500/30 p-5 shadow-2xl relative flex flex-col justify-between min-h-[460px] overflow-hidden text-left">
+              
+              {/* Top scanning / status line */}
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#06B6D4] to-transparent animate-scan" />
+              
+              {/* Guide Header */}
+              <div className="flex justify-between items-center pb-3 border-b border-slate-800">
+                <div className="flex items-center gap-2">
+                  <Compass className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '6s' }} />
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">GRID MANUAL v3.0 // STAGE 0{guideStep + 1}</span>
+                </div>
+                <button 
+                  onClick={() => setShowGuideModal(false)}
+                  className="p-1 hover:bg-slate-800 rounded-md text-slate-400 hover:text-white transition"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Realistic 3D Flipping Card Content Panel */}
+              <div className="my-auto py-4 font-sans" style={{ perspective: "1000px" }}>
+                <div 
+                  className="w-full clay-card p-4.5 space-y-3 shadow-xl transition-all duration-500 transform-gpu"
+                  style={{
+                    transform: `rotateY(${guideStep * 10}deg) rotateX(4deg)`,
+                    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.4)"
+                  }}
+                >
+                  
+                  {guideStep === 0 && (
+                    <div className="space-y-3 animate-fade-in text-left">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                          <Cpu className="w-4.5 h-4.5" />
+                        </div>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">01 // WHAT IS THIS SYSTEM?</h3>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                        <strong>Grid Guard Autopsy</strong> is an immersive multimodal AI diagnostic center built specifically to isolate infrastructure failures in heavy transit rail power corridors.
+                      </p>
+                      <div className="p-2.5 rounded-lg bg-[#0F172A]/70 border border-slate-805 text-[9.5px] font-mono text-slate-400 leading-normal font-bold">
+                        Maintains uninterrupted train network currents across regional rail sectors.
+                      </div>
+                    </div>
+                  )}
+
+                  {guideStep === 1 && (
+                    <div className="space-y-3 animate-fade-in text-left">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
+                          <Activity className="w-4.5 h-4.5" />
+                        </div>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">02 // WHY IT MATTERS (THE "WHY")</h3>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                        Standard operations rely on massive paper binders, manual telephone orders, and slow logistics, leaving stations broken for hours. This platform shrinks that diagnostic loop to seconds.
+                      </p>
+                      <div className="p-2.5 rounded-lg bg-[#0F172A]/70 border border-slate-805 text-[9.5px] font-mono text-slate-400 leading-normal font-bold">
+                        Eliminates cascade failures and track system shutdown penalties entirely.
+                      </div>
+                    </div>
+                  )}
+
+                  {guideStep === 2 && (
+                    <div className="space-y-3 animate-fade-in text-left">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                          <Compass className="w-4.5 h-4.5" />
+                        </div>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">03 // INTAKE & INGESTION</h3>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                        Operatives in the field can describe damages, input specific locations, attach diagrams, activate live camera stream to target component cracks, or transcribe field speech metrics.
+                      </p>
+                      <div className="p-2.5 rounded-lg bg-[#0F172A]/70 border border-slate-805 text-[9.5px] font-mono text-slate-400 leading-normal font-bold">
+                        Supports direct base64 uploads and hotkey recordings.
+                      </div>
+                    </div>
+                  )}
+
+                  {guideStep === 3 && (
+                    <div className="space-y-3 animate-fade-in text-left">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                          <Database className="w-4.5 h-4.5" />
+                        </div>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">04 // THE AI AUTOPSY CORE</h3>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                        Our advanced Gemini cognitive pipeline cross-probes input. It builds a failure analysis timeline, logs risk indexes, formats diagnostic guidance, and lists evidence gaps.
+                      </p>
+                      <div className="p-2.5 rounded-lg bg-[#0F172A]/70 border border-slate-805 text-[9.5px] font-mono text-[#06B6D4] leading-normal font-bold">
+                        *Supports OpenRouter proxies for seamless Vercel hosting.
+                      </div>
+                    </div>
+                  )}
+
+                  {guideStep === 4 && (
+                    <div className="space-y-3 animate-fade-in text-left">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                          <CheckSquare className="w-4.5 h-4.5" />
+                        </div>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">05 // SAFETY CHECKLISTS (SOP)</h3>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                        The SOP/Tools tab automatically parses repair manuals. Technicians tick steps off the list in real-time supporting standard LOTO (Lockout-Tagout) validations.
+                      </p>
+                      <div className="p-2.5 rounded-lg bg-[#0F172A]/70 border border-slate-805 text-[9.5px] font-mono text-slate-400 leading-normal font-bold">
+                        Verifiable checklist tallies generate compliant reports automatically.
+                      </div>
+                    </div>
+                  )}
+
+                  {guideStep === 5 && (
+                    <div className="space-y-3 animate-fade-in text-left">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-400">
+                          <Truck className="w-4.5 h-4.5" />
+                        </div>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">06 // AUTONOMOUS INVENTORY</h3>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                        Once mechanical faults are diagnosed (e.g. TR-88-M, CS-99), the dispatch pipeline automatically reserves spares from high voltage warehouse depots, with shipping ETAs.
+                      </p>
+                      <div className="p-2.5 rounded-lg bg-[#0F172A]/70 border border-slate-805 text-[9.5px] font-mono text-slate-400 leading-normal font-bold">
+                        Saves hours of phone confirmation and procurement hold delays.
+                      </div>
+                    </div>
+                  )}
+
+                  {guideStep === 6 && (
+                    <div className="space-y-3 animate-fade-in text-left">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-400">
+                          <FileText className="w-4.5 h-4.5" />
+                        </div>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">07 // HANDOVER REGISTER</h3>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
+                        Generates complete work logs on the Admin page. Automatically copies structured text blocks or allows downloading printable reports with custom offline safety layouts.
+                      </p>
+                      <div className="p-2.5 rounded-lg bg-[#0F172A]/70 border border-slate-805 text-[9.5px] font-mono text-slate-400 leading-normal font-bold">
+                        Includes supervisor digital countersigns and SHA hashes.
+                      </div>
+                    </div>
+                  )}
+
+                  {guideStep === 7 && (
+                    <div className="space-y-3 animate-fade-in text-left">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-[#10B981]">
+                          <Check className="w-4.5 h-4.5" />
+                        </div>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">08 // HACKATHON DOMINANCE</h3>
+                      </div>
+                      <p className="text-[11px] text-[#10B981] font-bold leading-normal font-sans">
+                        Grid Guard is a fully offline-persisted, production-ready, mission-critical infrastructure tool.
+                      </p>
+                      <p className="text-[10px] text-slate-400 leading-normal font-sans">
+                        Presenting structured LOTO checklist sign-offs, stock reservation loops, speech logs, and high-fidelity printable HTML reports sets the absolute gold standard to dominate any hackathon.
+                      </p>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+
+              {/* Stepper Footer Controls */}
+              <div className="space-y-3 pt-3 border-t border-slate-800">
+                <div className="flex justify-center gap-1.5">
+                  {Array.from({ length: 8 }).map((_, fIdx) => (
+                    <div 
+                      key={fIdx} 
+                      onClick={() => setGuideStep(fIdx)}
+                      className={`h-1.5 rounded-full cursor-pointer transition-all duration-150 ${guideStep === fIdx ? "w-5 bg-cyan-400" : "w-1.5 bg-slate-800 hover:bg-slate-705"}`}
+                    />
+                  ))}
+                </div>
+
+                <div className="flex justify-between items-center text-[10px] font-mono font-bold">
+                  <button
+                    disabled={guideStep === 0}
+                    onClick={() => setGuideStep(prev => prev - 1)}
+                    className={`flex items-center gap-1 transition ${
+                      guideStep === 0 ? "text-slate-800 pointer-events-none" : "text-slate-400 hover:text-white cursor-pointer"
+                    }`}
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    BACK
+                  </button>
+
+                  {guideStep < 7 ? (
+                    <button
+                      onClick={() => setGuideStep(prev => prev + 1)}
+                      className="px-3.5 py-1.5 bg-[#1E293B] hover:bg-slate-850 border border-slate-700/50 rounded-md transition text-white flex items-center gap-1 cursor-pointer font-mono"
+                    >
+                      NEXT
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowGuideModal(false)}
+                      className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:brightness-110 rounded-md transition text-[#0B1220] flex items-center gap-1 font-mono cursor-pointer"
+                    >
+                      LET'S GO!
+                    </button>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

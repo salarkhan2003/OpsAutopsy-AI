@@ -424,3 +424,47 @@ body.light .clay-button-amber span {
 body.light .animate-scan::after {
   background: linear-gradient(to right, transparent, #0891B2, transparent) !important;
 }
+
+/* High contrast support for body.light controls, togglers, and shift logs */
+body.light [class*="bg-[#243041]"],
+body.light .bg-\[\#243041\] {
+  background-color: var(--btn-sec-bg) !important;
+  color: var(--text-main) !important;
+}
+
+body.light button[class*="bg-[#243041]"],
+body.light button.bg-\[\#243041\],
+body.light .bg-\[\#243041\] button {
+  background-color: #E2E8F0 !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+body.light button[class*="bg-[#243041]"]:hover {
+  background-color: #CBD5E1 !important;
+}
+
+body.light [class*="bg-[#0F172A]"] {
+  background-color: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+}
+
+body.light [class*="bg-[#0F172A]"] strong {
+  color: #0F172A !important;
+  font-weight: 700 !important;
+}
+
+body.light [class*="bg-[#0F172A]"] p,
+body.light [class*="bg-[#0F172A]"] span {
+  color: #1E293B !important;
+}
+
+/* Ensure switch toggle circles on checked stay fully visible */
+body.light .peer-checked\:after\:bg-\[\#0F172A\]:checked {
+  background-color: #0891B2 !important;
+}
+
+body.light [class*="peer-checked:after:bg-[#0F172A]"] {
+  background-color: #FFFFFF !important;
+}
+
