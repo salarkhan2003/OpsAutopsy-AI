@@ -1,0 +1,6 @@
+{
+  "name": "OpsMind AI",
+  "description": "AI-Native Incident Intelligence for Field Operations - MVP Features (Top 1% Focused)",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
