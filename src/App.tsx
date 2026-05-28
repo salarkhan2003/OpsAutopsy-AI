@@ -935,7 +935,7 @@ export default function App() {
                   </div>
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className="w-4 h-4 text-[#06B6D4] shrink-0" />
-                    <span>Virtual micro-acoustic acoustic transcoder</span>
+                    <span>Hands-free voice transcription capture</span>
                   </div>
                 </div>
               </div>
@@ -1405,12 +1405,12 @@ export default function App() {
                   {loading ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin text-[#0F172A]" />
-                      ORCHESTRATING AI PROBE SEQUENCERS...
+                      RUNNING AI DIAGNOSIS ENGINE...
                     </>
                   ) : (
                     <>
                       <Play className="w-4 h-4 fill-current text-[#0F172A]" />
-                      EXECUTE AUTOPSY LOGIC GATE
+                      EXECUTE DIAGNOSTIC PROTOCOL
                     </>
                   )}
                 </button>
@@ -1418,7 +1418,7 @@ export default function App() {
                 {/* Simulated Diagnostic logs console output block */}
                 {loading && (
                   <div className="p-3.5 rounded-xl bg-[#0F172A] border border-slate-850 space-y-2">
-                    <span className="text-[8px] font-mono text-slate-500 uppercase block tracking-wider font-extrabold border-b border-slate-850 pb-1">AI PIPELINE ORCHESTRATOR STATUS TERMINAL</span>
+                    <span className="text-[8px] font-mono text-slate-500 uppercase block tracking-wider font-extrabold border-b border-slate-850 pb-1">AI DIAGNOSTIC COMPILATION PROCESS LOG</span>
                     <div className="space-y-1.5 max-h-[120px] overflow-y-auto scrollbar-none font-mono text-[10px] text-slate-400">
                       {progressLog.map((log, index) => (
                         <p key={index} className="animate-fade-in leading-relaxed text-[#22d3ee] font-medium">{log}</p>
@@ -2035,7 +2035,7 @@ export default function App() {
               <div className="p-5 clay-card space-y-5 relative overflow-hidden">
                 <div className="border-b border-slate-800/30 pb-3">
                   <span className="text-[9px] font-mono text-cyan-400 font-bold uppercase tracking-wider block font-black">COMPREHENSIVE MANUAL v3.0</span>
-                  <h2 className="text-base font-bold text-white font-mono uppercase tracking-wide">GRID GUARD AUTOPSY SYSTEM HANDBOOK</h2>
+                  <h2 className="text-base font-bold text-white font-mono uppercase tracking-wide">GRID DIAGNOSTIC & FAULT ANALYSIS HANDBOOK</h2>
                   <p className="text-[11px] text-slate-400 font-sans mt-0.5 font-bold">
                     Emergency Diagnostic, Lockout-Tagout (LOTO) Compliance & Autonomous Parts Dispatch Core.
                   </p>
@@ -2364,13 +2364,13 @@ export default function App() {
                         <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-[#10B981]">
                           <Check className="w-4.5 h-4.5" />
                         </div>
-                        <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">08 // HACKATHON DOMINANCE</h3>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">08 // AUDIT & COMPLIANCE</h3>
                       </div>
                       <p className="text-[11px] text-[#10B981] font-bold leading-normal font-sans">
-                        Grid Guard is a fully offline-persisted, production-ready, mission-critical infrastructure tool.
+                        OpsAutopsy AI ensures standard maintenance workflow compliance and full audit tracking.
                       </p>
                       <p className="text-[10px] text-slate-400 leading-normal font-sans">
-                        Presenting structured LOTO checklist sign-offs, stock reservation loops, speech logs, and high-fidelity printable HTML reports sets the absolute gold standard to dominate any hackathon.
+                        By logging safety SOP checklists, capturing physical evidence, and recording warehouse parts dispatcher transactions, the system creates structured records for grid regulatory authority inspections.
                       </p>
                     </div>
                   )}
