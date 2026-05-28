@@ -2173,7 +2173,7 @@ export default function App() {
             }`}
           >
             <Cpu className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate w-full text-center">Autopsy</span>
+            <span className="truncate w-full text-center">Analysis</span>
             {activeTab === "analysis" && (
               <span className="absolute -bottom-1.5 h-0.5 w-4 bg-cyan-400 rounded-full" />
             )}
@@ -2248,7 +2248,7 @@ export default function App() {
                         <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">01 // WHAT IS THIS SYSTEM?</h3>
                       </div>
                       <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
-                        <strong>Grid Guard Autopsy</strong> is an immersive multimodal AI diagnostic center built specifically to isolate infrastructure failures in heavy transit rail power corridors.
+                        <strong>OpsAutopsy AI</strong> is an advanced multimodal diagnostic engine built specifically to analyze and isolate infrastructure failures in heavy transit rail power corridors.
                       </p>
                       <div className="p-2.5 rounded-lg bg-[#0F172A]/70 border border-slate-805 text-[9.5px] font-mono text-slate-400 leading-normal font-bold">
                         Maintains uninterrupted train network currents across regional rail sectors.
